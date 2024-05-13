@@ -64,8 +64,16 @@ public class studentlist extends AppCompatActivity {
         btnBack.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // Hide edit fields
-                hideEditFields();
+                // Check if edit fields are visible
+                if (editTextName.getVisibility() == View.VISIBLE ||
+                        editTextLocation.getVisibility() == View.VISIBLE ||
+                        editTextCourse.getVisibility() == View.VISIBLE) {
+                    // Hide edit fields
+                    hideEditFields();
+                } else {
+                    // Navigate back to main activity
+                    finish();
+                }
             }
         });
 
