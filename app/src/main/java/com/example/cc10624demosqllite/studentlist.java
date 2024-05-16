@@ -1,7 +1,9 @@
 package com.example.cc10624demosqllite;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
@@ -16,14 +18,19 @@ import java.util.ArrayList;
 public class studentlist extends AppCompatActivity {
 
     ListView lsvStudent;
-    Button btnEdit, btnBack, btnSave;
+    Button btnEdit, btnBack, btnSave, btnDelete;
     EditText editTextName, editTextLocation, editTextCourse;
+
+    private DBHandler dbhandler;
+
     int selectedStudentId = -1; // To store the ID of the selected student
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_studentlist);
+
+        dbhandler = new DBHandler(this);
 
         lsvStudent = findViewById(R.id.lsvstudents);
         btnEdit = findViewById(R.id.btnEdit);
@@ -32,6 +39,7 @@ public class studentlist extends AppCompatActivity {
         editTextName = findViewById(R.id.editTextName);
         editTextLocation = findViewById(R.id.editTextLocation);
         editTextCourse = findViewById(R.id.editTextCourse);
+        btnDelete = findViewById(R.id.btnDelete);
 
         // Load student list
         loadStudentList();
@@ -84,20 +92,26 @@ public class studentlist extends AppCompatActivity {
                 saveChanges();
             }
         });
+
+        // Set click listener for the Delete button
+        btnDelete.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showAlertForDelete("Warning", "Are you sure you want to delete?", selectedStudentId);
+            }
+        });
     }
 
     // Method to load the student list
     private void loadStudentList() {
-        DBHandler db = new DBHandler(this);
-        ArrayList<String> studList = db.readStudent();
-        ArrayAdapter adapter = new ArrayAdapter(studentlist.this, android.R.layout.simple_list_item_1, studList);
+        ArrayList<String> studList = dbhandler.readStudent();
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(studentlist.this, android.R.layout.simple_list_item_1, studList);
         lsvStudent.setAdapter(adapter);
     }
 
     // Method to show edit fields and populate with student details
     private void showEditFields(int studentId) {
-        DBHandler db = new DBHandler(this);
-        ArrayList<String> studentDetails = db.getStudentDetails(studentId);
+        ArrayList<String> studentDetails = dbhandler.getStudentDetails(studentId);
         if (studentDetails != null && studentDetails.size() == 3) {
             editTextName.setText(studentDetails.get(0));
             editTextLocation.setText(studentDetails.get(1));
@@ -110,6 +124,7 @@ public class studentlist extends AppCompatActivity {
             lsvStudent.setVisibility(View.GONE);
             btnEdit.setVisibility(View.GONE);
             btnSave.setVisibility(View.VISIBLE);
+            btnDelete.setVisibility(View.VISIBLE);
         }
     }
 
@@ -123,6 +138,21 @@ public class studentlist extends AppCompatActivity {
         lsvStudent.setVisibility(View.VISIBLE);
         btnEdit.setVisibility(View.GONE);
         btnSave.setVisibility(View.GONE);
+        btnDelete.setVisibility(View.GONE);
+    }
+
+    private void showAlertForDelete(String title, String message, final int id) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle(title)
+                .setMessage(message)
+                .setPositiveButton("Yes", (dialog, which) -> {
+                    dbhandler.deleteStudent(id);
+                    // Refresh the student list
+                    hideEditFields();
+                    loadStudentList();
+                })
+                .setNegativeButton("No", (dialog, which) -> dialog.dismiss())
+                .show();
     }
 
     // Method to save changes
@@ -136,8 +166,7 @@ public class studentlist extends AppCompatActivity {
             return;
         }
 
-        DBHandler db = new DBHandler(this);
-        boolean isSuccess = db.updateStudentInfo(selectedStudentId, newName, newLocation, newCourse);
+        boolean isSuccess = dbhandler.updateStudentInfo(selectedStudentId, newName, newLocation, newCourse);
         if (isSuccess) {
             Toast.makeText(this, "Changes saved successfully.", Toast.LENGTH_SHORT).show();
             // Hide edit fields and show ListView and Edit button

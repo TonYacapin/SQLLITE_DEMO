@@ -11,7 +11,7 @@ import java.util.ArrayList;
 public class DBHandler extends SQLiteOpenHelper {
 
     private static final int DB_VERSION = 1;
-    private static final String DB_NAME = "dbstudent";
+    private static final String DB_NAME = "dbstudents";
     private static final String TABLE_NAME = "tblstudent";
     private static final String KEY_ID = "id";
     private static final String KEY_NAME = "name";
@@ -84,7 +84,7 @@ public class DBHandler extends SQLiteOpenHelper {
     }
 
 
-    void deleteStudent(int id) {
+    public void deleteStudent(int id) {
         SQLiteDatabase db = this.getWritableDatabase();
         db.delete(TABLE_NAME, KEY_ID + " = ?", new String[]{String.valueOf(id)});
         db.close();
